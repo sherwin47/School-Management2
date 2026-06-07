@@ -5,11 +5,13 @@ export type UserRole = 'SUPER_ADMIN' | 'SCHOOL_ADMIN' | 'TEACHER' | 'PARENT' | '
 
 export interface IUser extends Document, IAuditFields {
   schoolId?: Types.ObjectId; // Optional for super_admin
+  customId?: string;
   email: string;
   passwordHash: string;
   firstName: string;
   lastName: string;
   role: UserRole;
+  mustChangePassword: boolean;
   isActive: boolean;
   lastLogin?: Date;
   profilePicture?: string;
@@ -25,6 +27,7 @@ export interface IUser extends Document, IAuditFields {
 const userSchema = new Schema<IUser>(
   {
     schoolId: { type: Schema.Types.ObjectId, ref: 'School' },
+    customId: { type: String, trim: true, uppercase: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     firstName: { type: String, required: true, trim: true },
@@ -34,6 +37,7 @@ const userSchema = new Schema<IUser>(
       enum: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'TEACHER', 'PARENT', 'STUDENT', 'DRIVER', 'ACCOUNTANT'], 
       required: true 
     },
+    mustChangePassword: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
     profilePicture: { type: String },
@@ -52,5 +56,7 @@ userSchema.index({ schoolId: 1, email: 1 }, { unique: true });
 userSchema.index({ email: 1 });
 userSchema.index({ schoolId: 1, role: 1 });
 userSchema.index({ schoolId: 1, isActive: 1 });
+userSchema.index({ customId: 1 }, { unique: true, sparse: true });
 
 export const User = mongoose.model<IUser>('User', userSchema);
+export default User;
